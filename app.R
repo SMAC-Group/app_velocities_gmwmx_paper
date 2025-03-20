@@ -6,6 +6,7 @@ library(plotly)
 library(maps)
 library(RColorBrewer)
 library(shiny)
+library(shinyWidgets)
 
 # Function to create column color on df
 make_transparent <- function(colors, alpha = 0.5) {
@@ -64,7 +65,7 @@ calculate_arrows = function(vectors, arrow_length = 0.5, arrow_width = 0.2) {
 }
 
 
-load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0.5){
+load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0.5, selected_stations){
   
   
   
@@ -81,8 +82,10 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
   
   load(filename)
   set.seed(123)
-  names(df_merge2)
-  df_velocities_gmwmx_and_pbo = df_merge2[sample(1:1000, 100), ]
+  # names(df_merge2)
+  # df_velocities_gmwmx_and_pbo = df_merge2[sample(1:1000, 100), ]
+  # df_velocities_gmwmx_and_pbo = df_merge2[sample(1:1000, 100), ]
+  df_velocities_gmwmx_and_pbo = df_merge2 %>% dplyr::filter(station_name %in% selected_stations)
   # names(df_velocities_gmwmx_and_pbo)
   
   df_velocities_gmwmx_and_pbo$uncertainty_NE <- sqrt(df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dN_scaled^2 + df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dE_scaled^2)
@@ -151,6 +154,42 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
   return(list(vectors = vectors, arrow_coords = arrow_coords))
 }
 
+
+
+
+# ----------------- get all stations names
+load("merge_df.rda")
+all_station_names = unique(df_merge2$station_name)
+
+
+
+# ------------------ initial selected stations
+init_selected_stations = c("0HOT", "0HUD", "0LEN", "0NYL", "0SKN", "0SUN", "AB50", "ABAN", 
+                           "AC03", "AC08", "AC57", "AC58", "AC67", "ALCO", "ALME", "ARDA", 
+                           "ARDH", "ARVE", "AV11", "AV14", "BCWR", "BEZD", "BILL", "BLLM", 
+                           "BOIL", "BOMG", "BRAS", "BRBZ", "BRCH", "BRGN", "CAFR", "CHET", 
+                           "CHO6", "CHOJ", "CKVA", "COUT", "CRHS", "CTWI", "D398", "DRV6", 
+                           "ELAT", "ELK1", "ELSR", "EWLK", "FARB", "FLEM", "FLRC", "FRNS", 
+                           "FRRA", "G025", "G029", "G050", "G051", "G087", "G109", "G123", 
+                           "G149", "GCFS", "GNAA", "GOET", "GUM2", "GWWL", "HARB", "HKSS", 
+                           "HMLK", "HORS", "HOU2", "HUEG", "I053", "I070", "IAWS", "INJK", 
+                           "INKH", "IRKT", "IUCO", "J002", "J056", "J112", "J143", "J164", 
+                           "J179", "J244", "J327", "J368", "J444", "J525", "J529", "J547", 
+                           "J566", "J614", "J632", "J686", "J699", "J710", "J713", "J761", 
+                           "J791", "J823", "J857", "J947", "J948", "J967", "JNU1", "KAMO", 
+                           "KAUN", "KINS", "KOS2", "KOSZ", "KSU1", "KULL", "KYTI", "LACA", 
+                           "LEWK", "LFRG", "LINC", "LINO", "LON3", "LTAH", "MAS1", "MC06", 
+                           "MCTY", "MERA", "MET0", "MGMC", "MNJC", "MNLC", "MNSC", "MOX2", 
+                           "MPR1", "MSPH", "MWTP", "NORD", "NPOC", "NRDH", "NYBT", "ODRE", 
+                           "OKBF", "OKTE", "P134", "P180", "P197", "P223", "P322", "P356", 
+                           "P358", "P387", "P389", "P394", "P432", "P519", "P540", "P571", 
+                           "P594", "P616", "P645", "P680", "P783", "PAKU", "PAT2", "PHIN", 
+                           "PNE2", "PPST", "PPTE", "PZIN", "QTWN", "RAUL", "RG11", "ROSA", 
+                           "RPT6", "RVDI", "S004", "SAMO", "SCDA", "SCOR", "SCWT", "SIEN", 
+                           "SIO3", "SLEU", "SMID", "SPN5", "STR1", "SYOG", "TARV", "TDOU", 
+                           "TEG2", "TERO", "TIMM", "TOLO", "TROP", "TXBM", "ULAB", "VERG", 
+                           "VLKM", "VOUL", "WAWE", "WEAR", "WEIW", "WIS5", "YIBL", "ZDC1"
+)
 ui <- fluidPage(
   tags$head(
     tags$script("
@@ -311,6 +350,20 @@ ui <- fluidPage(
     class = "control-panel",
     column(6, style="padding-left: 0;",
            div(class = "control-group",
+               pickerInput(
+                 inputId = "selected_stations",
+                 label = "Select GNSS stations",
+                 choices = all_station_names,
+                 multiple = TRUE,
+                 selected = init_selected_stations,
+                 options = pickerOptions(
+                   actionsBox = TRUE,
+                   title = "Please select GNSS stations",
+                   header = "Selected GNSS stations"
+                 )
+               ),
+               
+               
                checkboxInput("show_arrows", "Show estimated tectonic velocities", TRUE),
                checkboxInput("show_bars", "Show estimated crustal uplfit velocity", FALSE)
             
@@ -363,7 +416,8 @@ server <- function(input, output, session) {
     arrow_len = 0.5
     arrow_width = 0.2
     
-    df = load_df_vel(filename="merge_df.rda", scale_arrow = scale_arrow, arrow_width=arrow_width, arrow_len=arrow_len)
+    df = load_df_vel(filename="merge_df.rda", scale_arrow = scale_arrow,
+                     arrow_width=arrow_width, arrow_len=arrow_len, selected_stations = input$selected_stations)
     vectors = df$vectors
     arrow_coords = df$arrow_coords
     
