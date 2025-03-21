@@ -69,7 +69,7 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
   
   
   
-  
+  # 
   # filename="merge_df.rda"
   # scale_arrow = 150
   # arrow_width=0.2
@@ -81,77 +81,98 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
   
   
   load(filename)
-  set.seed(123)
+  # set.seed(123)
   # names(df_merge2)
   # df_velocities_gmwmx_and_pbo = df_merge2[sample(1:1000, 100), ]
   # df_velocities_gmwmx_and_pbo = df_merge2[sample(1:1000, 100), ]
-  df_velocities_gmwmx_and_pbo = df_merge2 %>% dplyr::filter(station_name %in% selected_stations)
-  # names(df_velocities_gmwmx_and_pbo)
   
-  df_velocities_gmwmx_and_pbo$uncertainty_NE <- sqrt(df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dN_scaled^2 + df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dE_scaled^2)
-
   
-  x0 = df_velocities_gmwmx_and_pbo$longitude
-  y0 = df_velocities_gmwmx_and_pbo$latitude
-  x1 <- as.numeric(df_velocities_gmwmx_and_pbo$longitude + df_velocities_gmwmx_and_pbo$trend_gmwmx_dE_scaled * scale_arrow)
-  y1 <- as.numeric(df_velocities_gmwmx_and_pbo$latitude + df_velocities_gmwmx_and_pbo$trend_gmwmx_dN_scaled * scale_arrow)
+  #-------------- Initialize
   
-  vectors = data.frame(
-    name = df_velocities_gmwmx_and_pbo$station_name,
-    lat = y0,
-    lon = x0,
-    latend = y1,
-    lonend = x1,
-    horiz_N = df_velocities_gmwmx_and_pbo$trend_gmwmx_dN_scaled,
-    horiz_N_sd = df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dN_scaled,
-    horiz_E = df_velocities_gmwmx_and_pbo$trend_gmwmx_dE_scaled,
-    horiz_E_sd = df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dE_scaled,
-    height = df_velocities_gmwmx_and_pbo$trend_gmwmx_dU_scaled,
-    height_sd = df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dU_scaled
-  )
+  ret = list(vectors = NULL, arrow_coords = NULL)
   
-  # NE colors
-  breaks_col <- unique(quantile(df_velocities_gmwmx_and_pbo$uncertainty_NE))
-  my_green_to_red <- colorRampPalette(c("#FFA500", "#FF8C00", "#FF6347","red", "#8B0000"))
-  n_colors <- length(breaks_col) - 1
-  palette_breaks <- my_green_to_red(n_colors)
-  df_velocities_gmwmx_and_pbo$color_std_NE <- make_transparent(sapply(df_velocities_gmwmx_and_pbo$uncertainty_NE, 
-                                                                      get_color, 
-                                                                      breaks = breaks_col, 
-                                                                      palette = palette_breaks),
-                                                               alpha = .5)        
-  # Up/Down negative colors
-  vectors$height_col = NA
-  U_ind_neg = vectors$height<0
-  breaks_col <- unique(quantile(vectors$height[U_ind_neg]))
-  # my_blues <- colorRampPalette(c("#E6F3FF", "#94C7E1", "#6CB0D2", "#0066A5"))
-  # my_blues <- colorRampPalette(c("#6CB0D2", "#0066A5", "#004C7A", "#003357"))
-  my_blues <- colorRampPalette(c("#FFCCCC", "#FF6666", "#CC0000", "#990000"))
-  n_colors <- length(breaks_col) - 1
-  palette_breaks <- my_blues(n_colors)
-  vectors$height_col[U_ind_neg] <- make_transparent(sapply(vectors$height[U_ind_neg], 
-                                                           get_color, 
-                                                           breaks = breaks_col, 
-                                                           palette = palette_breaks),
-                                                    alpha = .5)        
-  # Up/Down positive colors
-  U_ind_pos = vectors$height>0
-  breaks_col <- unique(quantile(vectors$height[U_ind_pos]))
-  my_greens <- colorRampPalette(c("#E6FFE6", "#B3E6B3", "#80CC80", "#4DB34D"))
-  # my_greens <- colorRampPalette(c("#80CC80", "#4DB34D", "#2E8B2E", "#1F661F"))
-  n_colors <- length(breaks_col) - 1
-  palette_breaks <- my_greens(n_colors)
-  vectors$height_col[U_ind_pos] <- make_transparent(sapply(vectors$height[U_ind_pos], 
-                                                           get_color, 
-                                                           breaks = breaks_col, 
-                                                           palette = palette_breaks),
-                                                    alpha = .5)        
+  # ----------------------- compute required quantities if more than selected station
+  if(length(selected_stations) != 0){
+    df_velocities_gmwmx_and_pbo = df_merge2 %>% dplyr::filter(station_name %in% selected_stations)
+    # names(df_velocities_gmwmx_and_pbo)
+    
+    df_velocities_gmwmx_and_pbo$uncertainty_NE <- sqrt(df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dN_scaled^2 + df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dE_scaled^2)
+    
+    
+    x0 = df_velocities_gmwmx_and_pbo$longitude
+    y0 = df_velocities_gmwmx_and_pbo$latitude
+    x1 <- as.numeric(df_velocities_gmwmx_and_pbo$longitude + df_velocities_gmwmx_and_pbo$trend_gmwmx_dE_scaled * scale_arrow)
+    y1 <- as.numeric(df_velocities_gmwmx_and_pbo$latitude + df_velocities_gmwmx_and_pbo$trend_gmwmx_dN_scaled * scale_arrow)
+    
+    vectors = data.frame(
+      name = df_velocities_gmwmx_and_pbo$station_name,
+      lat = y0,
+      lon = x0,
+      latend = y1,
+      lonend = x1,
+      horiz_N = df_velocities_gmwmx_and_pbo$trend_gmwmx_dN_scaled,
+      horiz_N_sd = df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dN_scaled,
+      horiz_E = df_velocities_gmwmx_and_pbo$trend_gmwmx_dE_scaled,
+      horiz_E_sd = df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dE_scaled,
+      height = df_velocities_gmwmx_and_pbo$trend_gmwmx_dU_scaled,
+      height_sd = df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dU_scaled
+    )
+    
+    # NE colors
+    breaks_col <- unique(quantile(df_velocities_gmwmx_and_pbo$uncertainty_NE))
+    my_green_to_red <- colorRampPalette(c("#FFA500", "#FF8C00", "#FF6347","red", "#8B0000"))
+    n_colors <- length(breaks_col) - 1
+    palette_breaks <- my_green_to_red(n_colors)
+    df_velocities_gmwmx_and_pbo$color_std_NE <- make_transparent(sapply(df_velocities_gmwmx_and_pbo$uncertainty_NE, 
+                                                                        get_color, 
+                                                                        breaks = breaks_col, 
+                                                                        palette = palette_breaks),
+                                                                 alpha = .5)        
+    # Up/Down negative colors
+    vectors$height_col = NA
+    U_ind_neg = vectors$height<0
+    breaks_col <- unique(quantile(vectors$height[U_ind_neg]))
+    # my_blues <- colorRampPalette(c("#E6F3FF", "#94C7E1", "#6CB0D2", "#0066A5"))
+    # my_blues <- colorRampPalette(c("#6CB0D2", "#0066A5", "#004C7A", "#003357"))
+    my_blues <- colorRampPalette(c("#FFCCCC", "#FF6666", "#CC0000", "#990000"))
+    n_colors <- length(breaks_col) - 1
+    palette_breaks <- my_blues(n_colors)
+    vectors$height_col[U_ind_neg] <- make_transparent(sapply(vectors$height[U_ind_neg], 
+                                                             get_color, 
+                                                             breaks = breaks_col, 
+                                                             palette = palette_breaks),
+                                                      alpha = .5)        
+    # Up/Down positive colors
+    U_ind_pos = vectors$height>0
+    breaks_col <- unique(quantile(vectors$height[U_ind_pos]))
+    
+    if(length(selected_stations) == 1){
+      breaks_col = seq(0,.1, length.out=5)
+    }
+    
+    
+    my_greens <- colorRampPalette(c("#E6FFE6", "#B3E6B3", "#80CC80", "#4DB34D"))
+    # my_greens <- colorRampPalette(c("#80CC80", "#4DB34D", "#2E8B2E", "#1F661F"))
+    n_colors <- length(breaks_col) - 1
+    palette_breaks <- my_greens(n_colors)
+    vectors$height_col[U_ind_pos] <- make_transparent(sapply(vectors$height[U_ind_pos], 
+                                                             get_color, 
+                                                             breaks = breaks_col, 
+                                                             palette = palette_breaks),
+                                                      alpha = .5)        
+    
+    arrow_coords = calculate_arrows(vectors, arrow_len, arrow_width)
+    arrow_coords$cols_NE = rep(df_velocities_gmwmx_and_pbo$color_std_NE, each=4)
+    vectors$cols_NE = df_velocities_gmwmx_and_pbo$color_std_NE
+    
+    
+    ret = list(vectors = vectors, arrow_coords = arrow_coords)
   
-  arrow_coords = calculate_arrows(vectors, arrow_len, arrow_width)
-  arrow_coords$cols_NE = rep(df_velocities_gmwmx_and_pbo$color_std_NE, each=4)
-  vectors$cols_NE = df_velocities_gmwmx_and_pbo$color_std_NE
+    
+  }
   
-  return(list(vectors = vectors, arrow_coords = arrow_coords))
+  # -------------
+  return(ret)
 }
 
 
@@ -446,89 +467,101 @@ server <- function(input, output, session) {
     
     fig = plot_geo()
     
-    if(input$show_arrows) {
-      for (col_i in unique(vectors$cols_NE)){
-        fig = fig %>%
-          add_segments(
-            data = vectors[vectors$cols_NE==col_i,],
-            x = ~lon, xend = ~lonend,
-            y = ~lat, yend = ~latend,
-            colors = col_i,
-            mode = "lines",
-            line = list(color = col_i, width = 2),
-            hoverinfo = "none"
-          ) %>% 
-          add_trace(
-            data = arrow_coords[arrow_coords$cols_NE==col_i,],
-            type = "scattergeo",
-            lon = ~lon,
-            lat = ~lat,
-            split = ~group,
-            mode = "lines",
-            fill = "toself",
-            fillcolor = col_i, #~cols_NE,
-            line = list(color = col_i),
-            showlegend = FALSE,
-            hoverinfo = "none"
-          )
+
+  # if data set is not empty
+    if( length(vectors$cols_NE) !=  0  ){
+      
+      if(input$show_arrows) {
+        for (col_i in unique(vectors$cols_NE)){
+          fig = fig %>%
+            add_segments(
+              data = vectors[vectors$cols_NE==col_i,],
+              x = ~lon, xend = ~lonend,
+              y = ~lat, yend = ~latend,
+              colors = col_i,
+              mode = "lines",
+              line = list(color = col_i, width = 2),
+              hoverinfo = "none"
+            ) %>%
+            add_trace(
+              data = arrow_coords[arrow_coords$cols_NE==col_i,],
+              type = "scattergeo",
+              lon = ~lon,
+              lat = ~lat,
+              split = ~group,
+              mode = "lines",
+              fill = "toself",
+              fillcolor = col_i, #~cols_NE,
+              line = list(color = col_i),
+              showlegend = FALSE,
+              hoverinfo = "none"
+            )
+        }
       }
-    }
-    
-    if(input$show_bars) {
-      for (col_i in unique(vectors$height_col)){
-        fig = fig %>%
-          add_segments(
-            data = vectors[vectors$height_col==col_i,],
-            x = ~lon, xend = ~lon,
-            y = ~lat, yend = ~lat + height * bar_scale,
-            line = list(color = col_i, width = bar_width),
-            hoverinfo = "none"
-          ) 
+      
+      
+      if(input$show_bars) {
+        for (col_i in unique(vectors$height_col)){
+          fig = fig %>%
+            add_segments(
+              data = vectors[vectors$height_col==col_i,],
+              x = ~lon, xend = ~lon,
+              y = ~lat, yend = ~lat + height * bar_scale,
+              line = list(color = col_i, width = bar_width),
+              hoverinfo = "none"
+            )
+        }
+        
       }
-    }
-    
-    fig = fig %>%
-      add_trace(
-        data = vectors,
-        type = "scattergeo",
-        lon = ~lon,
-        lat = ~lat,
-        mode = "markers",
-        # marker = list(size = 5, color = ~cols_NE),
-        marker = list(size = 2.5, color = "black"),
-        # hoverinfo = "none"
-        hoverinfo = "text",
-        text = ~paste0(
-          "Station ID: ", name,
-          "<br>──────────────────",
-          "<br>Latitude:  ", round(lat, 2), "°",
-          "<br>Longitude: ", round(lon, 2), "°",
-          "<br>──────────────────",
-          "<br>            Velocity (std. dev) mm/year",
-          "<br>North/South: ", sprintf("%8.5f", horiz_N), " (", sprintf("%.5f", horiz_N_sd), ")",
-          "<br>East/West:   ", sprintf("%8.5f", horiz_E), " (", sprintf("%.5f", horiz_E_sd), ")",
-          "<br>Up/Down:     ", sprintf("%8.5f", height), " (", sprintf("%.5f", height_sd), ")"
-        ),
-        # text <- ~paste0(
-        #   "<table style='width:100%'>",
-        #   "<tr><td style='text-align:left;'>Station ID:</td><td style='text-align:right;'>", name, "</td></tr>",
-        #   "<tr><td style='text-align:left;'>Latitude:</td><td style='text-align:right;'>", round(lat, 2), "°</td></tr>",
-        #   "<tr><td style='text-align:left;'>Longitude:</td><td style='text-align:right;'>", round(lon, 2), "°</td></tr>",
-        #   "</table>"
-        # ),
-        
-        
-        hoverlabel = list(
-          bgcolor = "white",
-          bordercolor = "black",
-          font = list(
-            family = "monospace",
-            size = 12,
-            color = "black"
+      
+      
+      
+      
+      
+      
+      # ------------------------------ add points
+      fig = fig %>%
+        add_trace(
+          data = vectors,
+          type = "scattergeo",
+          lon = ~lon,
+          lat = ~lat,
+          mode = "markers",
+          # marker = list(size = 5, color = ~cols_NE),
+          marker = list(size = 2.5, color = "black"),
+          # hoverinfo = "none"
+          hoverinfo = "text",
+          text = ~paste0(
+            "Station ID: ", name,
+            "<br>──────────────────",
+            "<br>Latitude:  ", round(lat, 2), "°",
+            "<br>Longitude: ", round(lon, 2), "°",
+            "<br>──────────────────",
+            "<br>            Velocity (std. dev) mm/year",
+            "<br>North/South: ", sprintf("%8.5f", horiz_N), " (", sprintf("%.5f", horiz_N_sd), ")",
+            "<br>East/West:   ", sprintf("%8.5f", horiz_E), " (", sprintf("%.5f", horiz_E_sd), ")",
+            "<br>Up/Down:     ", sprintf("%8.5f", height), " (", sprintf("%.5f", height_sd), ")"
+          ),
+          
+          
+          
+          hoverlabel = list(
+            bgcolor = "white",
+            bordercolor = "black",
+            font = list(
+              family = "monospace",
+              size = 12,
+              color = "black"
+            )
           )
         )
-      )
+    }
+  
+
+
     
+    
+    # ------------------------- specify layout
     # fig$sizingPolicy$padding <- "0"
     fig = fig %>% layout(showlegend = FALSE, geo = g,
                          # autosize=F,
