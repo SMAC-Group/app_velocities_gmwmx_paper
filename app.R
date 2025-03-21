@@ -120,6 +120,12 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
     
     # NE colors
     breaks_col <- unique(quantile(df_velocities_gmwmx_and_pbo$uncertainty_NE))
+    
+    if(length(selected_stations) == 1){
+      breaks_col = seq(0,.1, length.out=5)
+    }
+    
+    
     my_green_to_red <- colorRampPalette(c("#FFA500", "#FF8C00", "#FF6347","red", "#8B0000"))
     n_colors <- length(breaks_col) - 1
     palette_breaks <- my_green_to_red(n_colors)
@@ -132,6 +138,13 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
     vectors$height_col = NA
     U_ind_neg = vectors$height<0
     breaks_col <- unique(quantile(vectors$height[U_ind_neg]))
+    
+    if(length(selected_stations) == 1){
+      breaks_col = seq(0,.1, length.out=5)
+    }
+    
+    
+    
     # my_blues <- colorRampPalette(c("#E6F3FF", "#94C7E1", "#6CB0D2", "#0066A5"))
     # my_blues <- colorRampPalette(c("#6CB0D2", "#0066A5", "#004C7A", "#003357"))
     my_blues <- colorRampPalette(c("#FFCCCC", "#FF6666", "#CC0000", "#990000"))
