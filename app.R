@@ -125,7 +125,6 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
       breaks_col = seq(0,.1, length.out=5)
     }
     
-    
     my_green_to_red <- colorRampPalette(c("#FFA500", "#FF8C00", "#FF6347","red", "#8B0000"))
     n_colors <- length(breaks_col) - 1
     palette_breaks <- my_green_to_red(n_colors)
@@ -198,32 +197,27 @@ all_station_names = unique(df_merge2$station_name)
 
 
 # ------------------ initial selected stations
-init_selected_stations = c("0HOT", "0HUD", "0LEN", "0NYL", "0SKN", "0SUN", "AB50", "ABAN", 
-                           "AC03", "AC08", "AC57", "AC58", "AC67", "ALCO", "ALME", "ARDA", 
-                           "ARDH", "ARVE", "AV11", "AV14", "BCWR", "BEZD", "BILL", "BLLM", 
-                           "BOIL", "BOMG", "BRAS", "BRBZ", "BRCH", "BRGN", "CAFR", "CHET", 
-                           "CHO6", "CHOJ", "CKVA", "COUT", "CRHS", "CTWI", "D398", "DRV6", 
-                           "ELAT", "ELK1", "ELSR", "EWLK", "FARB", "FLEM", "FLRC", "FRNS", 
-                           "FRRA", "G025", "G029", "G050", "G051", "G087", "G109", "G123", 
-                           "G149", "GCFS", "GNAA", "GOET", "GUM2", "GWWL", "HARB", "HKSS", 
-                           "HMLK", "HORS", "HOU2", "HUEG", "I053", "I070", "IAWS", "INJK", 
-                           "INKH", "IRKT", "IUCO", "J002", "J056", "J112", "J143", "J164", 
-                           "J179", "J244", "J327", "J368", "J444", "J525", "J529", "J547", 
-                           "J566", "J614", "J632", "J686", "J699", "J710", "J713", "J761", 
-                           "J791", "J823", "J857", "J947", "J948", "J967", "JNU1", "KAMO", 
-                           "KAUN", "KINS", "KOS2", "KOSZ", "KSU1", "KULL", "KYTI", "LACA", 
-                           "LEWK", "LFRG", "LINC", "LINO", "LON3", "LTAH", "MAS1", "MC06", 
-                           "MCTY", "MERA", "MET0", "MGMC", "MNJC", "MNLC", "MNSC", "MOX2", 
-                           "MPR1", "MSPH", "MWTP", "NORD", "NPOC", "NRDH", "NYBT", "ODRE", 
-                           "OKBF", "OKTE", "P134", "P180", "P197", "P223", "P322", "P356", 
-                           "P358", "P387", "P389", "P394", "P432", "P519", "P540", "P571", 
-                           "P594", "P616", "P645", "P680", "P783", "PAKU", "PAT2", "PHIN", 
-                           "PNE2", "PPST", "PPTE", "PZIN", "QTWN", "RAUL", "RG11", "ROSA", 
-                           "RPT6", "RVDI", "S004", "SAMO", "SCDA", "SCOR", "SCWT", "SIEN", 
-                           "SIO3", "SLEU", "SMID", "SPN5", "STR1", "SYOG", "TARV", "TDOU", 
-                           "TEG2", "TERO", "TIMM", "TOLO", "TROP", "TXBM", "ULAB", "VERG", 
-                           "VLKM", "VOUL", "WAWE", "WEAR", "WEIW", "WIS5", "YIBL", "ZDC1"
-)
+init_selected_stations = c("0NYL", "0SUN", "AC67", "ARDA", "BCWR", "BEZD", "BOIL", "BRGN", 
+                           "CHOJ", "CKVA", "CTWI", "D398", "ELAT", "G025", "G029", "G050", 
+                           "GOET", "HKSS", "HOU2", "I053", "IRKT", "J143", "J444", "J525", 
+                           "J566", "J614", "J710", "J823", "KINS", "KULL", "LACA", "LINO", 
+                           "LTAH", "MCTY", "MERA", "MNSC", "ODRE", "P180", "P223", "P540", 
+                           "P594", "P616", "PAKU", "PAT2", "PHIN", "ROSA", "SCWT", "TERO", 
+                           "TROP", "ZDC1")
+
+
+
+
+
+
+
+
+
+
+
+
+
+#- ------------------------------------------- define UI
 ui <- fluidPage(
   tags$head(
     tags$script("
