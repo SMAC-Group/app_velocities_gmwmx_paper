@@ -203,7 +203,7 @@ init_selected_stations = c("0NYL", "0SUN", "AC67", "ARDA", "BCWR", "BEZD", "BOIL
                            "J566", "J614", "J710", "J823", "KINS", "KULL", "LACA", "LINO", 
                            "LTAH", "MCTY", "MERA", "MNSC", "ODRE", "P180", "P223", "P540", 
                            "P594", "P616", "PAKU", "PAT2", "PHIN", "ROSA", "SCWT", "TERO", 
-                           "TROP", "ZDC1")
+                           "TROP", "ZDC1", "AUBN")
 
 
 
@@ -449,6 +449,12 @@ server <- function(input, output, session) {
     vectors = df$vectors
     arrow_coords = df$arrow_coords
     
+    
+    
+    
+    
+    
+    # ------------------
     g = list(
       scope = 'world',
       showframe = FALSE,
@@ -457,7 +463,7 @@ server <- function(input, output, session) {
       projection = list(type = 'orthographic',
                         scale = 0.45,
                         resolution = '100'), 
-      resolution = "10", # 50
+      resolution = "20", # 50
       showcountries = F,
       # countrycolor = '#d1d1d1',
       showland = TRUE,
@@ -568,14 +574,14 @@ server <- function(input, output, session) {
 
     
     
-    # ------------------------- specify layout
+    # # ------------------------- specify layout
     # fig$sizingPolicy$padding <- "0"
     fig = fig %>% layout(showlegend = FALSE, geo = g,
                          # autosize=F,
                          paper_bgcolor='rgba(0,0,0,0)',
                          plot_bgcolor='rgba(0,0,0,0)',
                          margin = list(l = 0, r = 0, t = 0, b = 0, pad = 0, autoexpand = T))
-    
+
   })
 }
 
