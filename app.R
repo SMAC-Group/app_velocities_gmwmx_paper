@@ -1,4 +1,5 @@
-rm(list=ls())
+# clean ws 
+rm(list = ls())
 
 
 # devtools::install_github('ropensci/plotly')
@@ -14,13 +15,13 @@ make_transparent <- function(colors, alpha = 0.5) {
   if (alpha < 0 || alpha > 1) {
     stop("Alpha value must be between 0 and 1")
   }
-  
+
   # Convert colors to RGB and add alpha
   transparent_colors <- sapply(colors, function(col) {
     rgb_val <- col2rgb(col) / 255
     rgb(rgb_val[1], rgb_val[2], rgb_val[3], alpha = alpha)
   })
-  
+
   return(transparent_colors)
 }
 
@@ -36,75 +37,71 @@ get_color <- function(value, breaks, palette) {
   return(palette[idx])
 }
 
-calculate_arrows = function(vectors, arrow_length = 0.5, arrow_width = 0.2) {
-  A = cbind(vectors$lon, vectors$lat)
-  B = cbind(vectors$lonend, vectors$latend)
-  
+calculate_arrows <- function(vectors, arrow_length = 0.5, arrow_width = 0.2) {
+  A <- cbind(vectors$lon, vectors$lat)
+  B <- cbind(vectors$lonend, vectors$latend)
+
   # normalized direction vector as a unit vector
-  v = B - A
-  w = v/sqrt(rowSums(v^2))
-  
+  v <- B - A
+  w <- v / sqrt(rowSums(v^2))
+
   # dealing with lon/lat, we need to account for latitude scaling
   # perpendicular vector needs to be scaled by cos(latitude) for longitude component
-  lat_rad = B[,2] * pi/180  # Convert latitude to radians
-  scale_factor = cos(lat_rad)
+  lat_rad <- B[, 2] * pi / 180 # Convert latitude to radians
+  scale_factor <- cos(lat_rad)
   # perpendicular vector with latitude scaling
-  u = cbind(-w[,2]/scale_factor, w[,1]*scale_factor)
-  
+  u <- cbind(-w[, 2] / scale_factor, w[, 1] * scale_factor)
+
   # arrow points
-  S = B - arrow_width * u
-  T = B + arrow_width * u
-  P = B + arrow_length * w
-  
-  arrow_data = data.frame(
-    lon = c(rbind(S[,1], T[,1], P[,1], S[,1])),
-    lat = c(rbind(S[,2], T[,2], P[,2], S[,2])),
+  S <- B - arrow_width * u
+  T <- B + arrow_width * u
+  P <- B + arrow_length * w
+
+  arrow_data <- data.frame(
+    lon = c(rbind(S[, 1], T[, 1], P[, 1], S[, 1])),
+    lat = c(rbind(S[, 2], T[, 2], P[, 2], S[, 2])),
     group = rep(1:nrow(vectors), each = 4)
   )
   return(arrow_data)
 }
 
 
-load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0.5, selected_stations){
-  
-  
-  
-  # 
+load_df_vel <- function(filename, scale_arrow = .15, arrow_width = 0.2, arrow_len = 0.5, selected_stations) {
+  #
   # filename="merge_df.rda"
   # scale_arrow = 150
   # arrow_width=0.2
   # arrow_len=0.5
-  # 
-  
-  
-  
-  
-  
+  #
+
+
+
+
+
   load(filename)
   # set.seed(123)
   # names(df_merge2)
   # df_velocities_gmwmx_and_pbo = df_merge2[sample(1:1000, 100), ]
   # df_velocities_gmwmx_and_pbo = df_merge2[sample(1:1000, 100), ]
-  
-  
-  #-------------- Initialize
-  
-  ret = list(vectors = NULL, arrow_coords = NULL)
-  
+
+
+  #-------------- Initialize return
+  ret <- list(vectors = NULL, arrow_coords = NULL)
+
   # ----------------------- compute required quantities if more than selected station
-  if(length(selected_stations) != 0){
-    df_velocities_gmwmx_and_pbo = df_merge2 %>% dplyr::filter(station_name %in% selected_stations)
+  if (length(selected_stations) != 0) {
+    df_velocities_gmwmx_and_pbo <- df_merge2 %>% dplyr::filter(station_name %in% selected_stations)
     # names(df_velocities_gmwmx_and_pbo)
-    
+
     df_velocities_gmwmx_and_pbo$uncertainty_NE <- sqrt(df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dN_scaled^2 + df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dE_scaled^2)
-    
-    
-    x0 = df_velocities_gmwmx_and_pbo$longitude
-    y0 = df_velocities_gmwmx_and_pbo$latitude
+
+
+    x0 <- df_velocities_gmwmx_and_pbo$longitude
+    y0 <- df_velocities_gmwmx_and_pbo$latitude
     x1 <- as.numeric(df_velocities_gmwmx_and_pbo$longitude + df_velocities_gmwmx_and_pbo$trend_gmwmx_dE_scaled * scale_arrow)
     y1 <- as.numeric(df_velocities_gmwmx_and_pbo$latitude + df_velocities_gmwmx_and_pbo$trend_gmwmx_dN_scaled * scale_arrow)
-    
-    vectors = data.frame(
+
+    vectors <- data.frame(
       name = df_velocities_gmwmx_and_pbo$station_name,
       lat = y0,
       lon = x0,
@@ -117,73 +114,79 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
       height = df_velocities_gmwmx_and_pbo$trend_gmwmx_dU_scaled,
       height_sd = df_velocities_gmwmx_and_pbo$std_trend_gmwmx_dU_scaled
     )
-    
+
     # NE colors
     breaks_col <- unique(quantile(df_velocities_gmwmx_and_pbo$uncertainty_NE))
-    
-    if(length(selected_stations) == 1){
-      breaks_col = seq(0,.1, length.out=5)
+
+    if (length(selected_stations) == 1) {
+      breaks_col <- seq(0, .1, length.out = 5)
     }
-    
-    my_green_to_red <- colorRampPalette(c("#FFA500", "#FF8C00", "#FF6347","red", "#8B0000"))
+
+    my_green_to_red <- colorRampPalette(c("#FFA500", "#FF8C00", "#FF6347", "red", "#8B0000"))
     n_colors <- length(breaks_col) - 1
     palette_breaks <- my_green_to_red(n_colors)
-    df_velocities_gmwmx_and_pbo$color_std_NE <- make_transparent(sapply(df_velocities_gmwmx_and_pbo$uncertainty_NE, 
-                                                                        get_color, 
-                                                                        breaks = breaks_col, 
-                                                                        palette = palette_breaks),
-                                                                 alpha = .5)        
+    df_velocities_gmwmx_and_pbo$color_std_NE <- make_transparent(
+      sapply(df_velocities_gmwmx_and_pbo$uncertainty_NE,
+        get_color,
+        breaks = breaks_col,
+        palette = palette_breaks
+      ),
+      alpha = .5
+    )
+    
     # Up/Down negative colors
-    vectors$height_col = NA
-    U_ind_neg = vectors$height<0
+    vectors$height_col <- NA
+    U_ind_neg <- vectors$height < 0
     breaks_col <- unique(quantile(vectors$height[U_ind_neg]))
-    
-    if(length(selected_stations) == 1){
-      breaks_col = seq(0,.1, length.out=5)
+
+    if (length(selected_stations) == 1) {
+      breaks_col <- seq(0, .1, length.out = 5)
     }
-    
-    
-    
-    # my_blues <- colorRampPalette(c("#E6F3FF", "#94C7E1", "#6CB0D2", "#0066A5"))
-    # my_blues <- colorRampPalette(c("#6CB0D2", "#0066A5", "#004C7A", "#003357"))
-    my_blues <- colorRampPalette(c("#FFCCCC", "#FF6666", "#CC0000", "#990000"))
+
+    myreds <- colorRampPalette(c("#FFCCCC", "#FF6666", "#CC0000", "#990000"))
     n_colors <- length(breaks_col) - 1
-    palette_breaks <- my_blues(n_colors)
-    vectors$height_col[U_ind_neg] <- make_transparent(sapply(vectors$height[U_ind_neg], 
-                                                             get_color, 
-                                                             breaks = breaks_col, 
-                                                             palette = palette_breaks),
-                                                      alpha = .5)        
+    palette_breaks <- myreds(n_colors)
+    vectors$height_col[U_ind_neg] <- make_transparent(
+      sapply(vectors$height[U_ind_neg],
+        get_color,
+        breaks = breaks_col,
+        palette = palette_breaks
+      ),
+      alpha = .5
+    )
     # Up/Down positive colors
-    U_ind_pos = vectors$height>0
+    U_ind_pos <- vectors$height > 0
     breaks_col <- unique(quantile(vectors$height[U_ind_pos]))
-    
-    if(length(selected_stations) == 1){
-      breaks_col = seq(0,.1, length.out=5)
+
+    if (length(selected_stations) == 1) {
+      breaks_col <- seq(0, .1, length.out = 5)
     }
-    
-    
+
+
     my_greens <- colorRampPalette(c("#E6FFE6", "#B3E6B3", "#80CC80", "#4DB34D"))
-    # my_greens <- colorRampPalette(c("#80CC80", "#4DB34D", "#2E8B2E", "#1F661F"))
     n_colors <- length(breaks_col) - 1
     palette_breaks <- my_greens(n_colors)
-    vectors$height_col[U_ind_pos] <- make_transparent(sapply(vectors$height[U_ind_pos], 
-                                                             get_color, 
-                                                             breaks = breaks_col, 
-                                                             palette = palette_breaks),
-                                                      alpha = .5)        
+    vectors$height_col[U_ind_pos] <- make_transparent(
+      sapply(vectors$height[U_ind_pos],
+        get_color,
+        breaks = breaks_col,
+        palette = palette_breaks
+      ),
+      alpha = .5
+    )
     
-    arrow_coords = calculate_arrows(vectors, arrow_len, arrow_width)
-    arrow_coords$cols_NE = rep(df_velocities_gmwmx_and_pbo$color_std_NE, each=4)
-    vectors$cols_NE = df_velocities_gmwmx_and_pbo$color_std_NE
     
     
-    ret = list(vectors = vectors, arrow_coords = arrow_coords)
-  
-    
+    # compute arrows length
+    arrow_coords <- calculate_arrows(vectors, arrow_len, arrow_width)
+    arrow_coords$cols_NE <- rep(df_velocities_gmwmx_and_pbo$color_std_NE, each = 4)
+    vectors$cols_NE <- df_velocities_gmwmx_and_pbo$color_std_NE
+
+    # - return computed vectorrs and arrow coordinates
+    ret <- list(vectors = vectors, arrow_coords = arrow_coords)
   }
-  
-  # -------------
+
+  # ------------- return
   return(ret)
 }
 
@@ -192,18 +195,20 @@ load_df_vel = function(filename, scale_arrow = .15, arrow_width=0.2, arrow_len=0
 
 # ----------------- get all stations names
 load("merge_df.rda")
-all_station_names = unique(df_merge2$station_name)
+all_station_names <- unique(df_merge2$station_name)
 
 
 
 # ------------------ initial selected stations
-init_selected_stations = c("0NYL", "0SUN", "AC67", "ARDA", "BCWR", "BEZD", "BOIL", "BRGN", 
-                           "CHOJ", "CKVA", "CTWI", "D398", "ELAT", "G025", "G029", "G050", 
-                           "GOET", "HKSS", "HOU2", "I053", "IRKT", "J143", "J444", "J525", 
-                           "J566", "J614", "J710", "J823", "KINS", "KULL", "LACA", "LINO", 
-                           "LTAH", "MCTY", "MERA", "MNSC", "ODRE", "P180", "P223", "P540", 
-                           "P594", "P616", "PAKU", "PAT2", "PHIN", "ROSA", "SCWT", "TERO", 
-                           "TROP", "ZDC1", "AUBN")
+init_selected_stations <- c(
+  "0NYL", "0SUN", "AC67", "ARDA", "BCWR", "BEZD", "BOIL", "BRGN",
+  "CHOJ", "CKVA", "CTWI", "D398", "ELAT", "G025", "G029", "G050",
+  "GOET", "HKSS", "HOU2", "I053", "IRKT", "J143", "J444", "J525",
+  "J566", "J614", "J710", "J823", "KINS", "KULL", "LACA", "LINO",
+  "LTAH", "MCTY", "MERA", "MNSC", "ODRE", "P180", "P223", "P540",
+  "P594", "P616", "PAKU", "PAT2", "PHIN", "ROSA", "SCWT", "TERO",
+  "TROP", "ZDC1", "ALA1"
+)
 
 
 
@@ -222,12 +227,12 @@ ui <- fluidPage(
   tags$head(
     tags$script("
       window.onload = function() {
-        window.scrollTo((document.documentElement.scrollWidth - document.documentElement.clientWidth) / 2, 
+        window.scrollTo((document.documentElement.scrollWidth - document.documentElement.clientWidth) / 2,
                        document.body.scrollHeight / 4);
       }
     "),
     tags$style(HTML("
-      body { 
+      body {
         background-color: black !important;
       }
       .control-panel {
@@ -373,96 +378,113 @@ ui <- fluidPage(
       }
     "))
   ),
-  
   fluidRow(
     class = "control-panel",
-    column(6, style="padding-left: 0;",
-           div(class = "control-group",
-               pickerInput(
-                 inputId = "selected_stations",
-                 label = "Select GNSS stations",
-                 choices = all_station_names,
-                 multiple = TRUE,
-                 selected = init_selected_stations,
-                 options = pickerOptions(
-                   actionsBox = TRUE,
-                   title = "Please select GNSS stations",
-                   header = "Selected GNSS stations"
-                 )
-               ),
-               
-               
-               checkboxInput("show_arrows", "Show estimated tectonic velocities", TRUE),
-               checkboxInput("show_bars", "Show estimated crustal uplfit velocity", FALSE)
-            
-           )
-    ),
     column(6,
-           div(class = "legend-container",
-               div(class = "legend-content",
-                   div(class = "legend-main-title", "Legend"),
-                   div(class = "legend-columns",
-                       div(class = "legend-column",
-                           div(class = "legend-title", "Vertical (up)"),
-                           div(class = "color-box up-gradient"),
-                           div(class = "scale-labels",
-                               span("Low"),
-                               span("High")
-                           )
-                       ),
-                       div(class = "legend-column",
-                           div(class = "legend-title", "Vertical (down)"),
-                           div(class = "color-box down-gradient"),
-                           div(class = "scale-labels",
-                               span("Low"),
-                               span("High")
-                           )
-                       ),
-                       div(class = "legend-column",
-                           div(class = "legend-title", "Horizontal Uncertainty"),
-                           div(class = "color-box uncertainty-gradient"),
-                           div(class = "scale-labels",
-                               span("Low"),
-                               span("High")
-                           )
-                       )
-                   )
-               )
-           )
+      style = "padding-left: 0;",
+      div(
+        class = "control-group",
+        pickerInput(
+          inputId = "selected_stations",
+          label = "Select GNSS stations",
+          choices = all_station_names,
+          multiple = TRUE,
+          selected = init_selected_stations,
+          options = pickerOptions(
+            actionsBox = TRUE,
+            title = "Please select GNSS stations",
+            header = "Selected GNSS stations"
+          )
+        ),
+        checkboxInput("show_arrows", "Show estimated tectonic velocities", TRUE),
+        checkboxInput("show_bars", "Show estimated crustal uplfit velocity", FALSE)
+      )
+    ),
+    column(
+      6,
+      div(
+        class = "legend-container",
+        div(
+          class = "legend-content",
+          div(class = "legend-main-title", "Legend"),
+          div(
+            class = "legend-columns",
+            div(
+              class = "legend-column",
+              div(class = "legend-title", "Vertical (up)"),
+              div(class = "color-box up-gradient"),
+              div(
+                class = "scale-labels",
+                span("Low"),
+                span("High")
+              )
+            ),
+            div(
+              class = "legend-column",
+              div(class = "legend-title", "Vertical (down)"),
+              div(class = "color-box down-gradient"),
+              div(
+                class = "scale-labels",
+                span("Low"),
+                span("High")
+              )
+            ),
+            div(
+              class = "legend-column",
+              div(class = "legend-title", "Horizontal Uncertainty"),
+              div(class = "color-box uncertainty-gradient"),
+              div(
+                class = "scale-labels",
+                span("Low"),
+                span("High")
+              )
+            )
+          )
+        )
+      )
     )
   ),
-  
   plotlyOutput("plot", width = "150vw", height = "206vh")
 )
 
 server <- function(input, output, session) {
   output$plot <- renderPlotly({
     
-    bar_width = 12
-    bar_scale = .2
-    scale_arrow = .15
-    arrow_len = 0.5
-    arrow_width = 0.2
-    
-    df = load_df_vel(filename="merge_df.rda", scale_arrow = scale_arrow,
-                     arrow_width=arrow_width, arrow_len=arrow_len, selected_stations = input$selected_stations)
-    vectors = df$vectors
-    arrow_coords = df$arrow_coords
+    # ------------------ define parameters for plotting
+    bar_width <- 12
+    bar_scale <- .2
+    scale_arrow <- .15
+    arrow_len <- 0.5
+    arrow_width <- 0.2
+
     
     
     
+    # ----------------- create df
+    df <- load_df_vel(
+      filename = "merge_df.rda", scale_arrow = scale_arrow,
+      arrow_width = arrow_width, arrow_len = arrow_len,
+      selected_stations = input$selected_stations
+    )
     
     
     
-    # ------------------
-    g = list(
-      scope = 'world',
+    # -------------- define vectors and arrow coords
+    vectors <- df$vectors
+    arrow_coords <- df$arrow_coords
+
+
+    # ------------------ create g for plot
+    g <- list(
+      scope = "world",
       showframe = FALSE,
       showcoastlines = T,
       coastlinewidth = 1,
-      projection = list(type = 'orthographic',
-                        scale = 0.45,
-                        resolution = '100'), 
+      projection = list(
+        type = "orthographic",
+        scale = 0.45,
+        resolution = "100"
+      ),
       resolution = "20", # 50
       showcountries = F,
       # countrycolor = '#d1d1d1',
@@ -473,22 +495,23 @@ server <- function(input, output, session) {
       showlakes = F,
       lakecolor = toRGB("#99C0DBCC"),
       showrivers = F,
-      rivercolor = toRGB('#99C0DBCC'),
+      rivercolor = toRGB("#99C0DBCC"),
       # fitbounds = "locations",
-      bgcolor = toRGB("black") 
+      bgcolor = toRGB("black")
     )
-    
-    fig = plot_geo()
-    
 
-  # if data set is not empty
-    if( length(vectors$cols_NE) !=  0  ){
-      
-      if(input$show_arrows) {
-        for (col_i in unique(vectors$cols_NE)){
-          fig = fig %>%
+
+    # plot fig
+    fig <- plot_geo()
+
+
+    # if data set is not empty
+    if (length(vectors$cols_NE) != 0) {
+      if (input$show_arrows) {
+        for (col_i in unique(vectors$cols_NE)) {
+          fig <- fig %>%
             add_segments(
-              data = vectors[vectors$cols_NE==col_i,],
+              data = vectors[vectors$cols_NE == col_i, ],
               x = ~lon, xend = ~lonend,
               y = ~lat, yend = ~latend,
               colors = col_i,
@@ -497,43 +520,42 @@ server <- function(input, output, session) {
               hoverinfo = "none"
             ) %>%
             add_trace(
-              data = arrow_coords[arrow_coords$cols_NE==col_i,],
+              data = arrow_coords[arrow_coords$cols_NE == col_i, ],
               type = "scattergeo",
               lon = ~lon,
               lat = ~lat,
               split = ~group,
               mode = "lines",
               fill = "toself",
-              fillcolor = col_i, #~cols_NE,
+              fillcolor = col_i, # ~cols_NE,
               line = list(color = col_i),
               showlegend = FALSE,
               hoverinfo = "none"
             )
         }
       }
-      
-      
-      if(input$show_bars) {
-        for (col_i in unique(vectors$height_col)){
-          fig = fig %>%
+
+
+      if (input$show_bars) {
+        for (col_i in unique(vectors$height_col)) {
+          fig <- fig %>%
             add_segments(
-              data = vectors[vectors$height_col==col_i,],
+              data = vectors[vectors$height_col == col_i, ],
               x = ~lon, xend = ~lon,
-              y = ~lat, yend = ~lat + height * bar_scale,
+              y = ~lat, yend = ~ lat + height * bar_scale,
               line = list(color = col_i, width = bar_width),
               hoverinfo = "none"
             )
         }
-        
       }
-      
-      
-      
-      
-      
-      
+
+
+
+
+
+
       # ------------------------------ add points
-      fig = fig %>%
+      fig <- fig %>%
         add_trace(
           data = vectors,
           type = "scattergeo",
@@ -544,7 +566,7 @@ server <- function(input, output, session) {
           marker = list(size = 2.5, color = "black"),
           # hoverinfo = "none"
           hoverinfo = "text",
-          text = ~paste0(
+          text = ~ paste0(
             "Station ID: ", name,
             "<br>──────────────────",
             "<br>Latitude:  ", round(lat, 2), "°",
@@ -555,9 +577,6 @@ server <- function(input, output, session) {
             "<br>East/West:   ", sprintf("%8.5f", horiz_E), " (", sprintf("%.5f", horiz_E_sd), ")",
             "<br>Up/Down:     ", sprintf("%8.5f", height), " (", sprintf("%.5f", height_sd), ")"
           ),
-          
-          
-          
           hoverlabel = list(
             bgcolor = "white",
             bordercolor = "black",
@@ -569,21 +588,24 @@ server <- function(input, output, session) {
           )
         )
     }
-  
 
 
-    
-    
+
+
+
     # # ------------------------- specify layout
     # fig$sizingPolicy$padding <- "0"
-    fig = fig %>% layout(showlegend = FALSE, geo = g,
-                         # autosize=F,
-                         paper_bgcolor='rgba(0,0,0,0)',
-                         plot_bgcolor='rgba(0,0,0,0)',
-                         margin = list(l = 0, r = 0, t = 0, b = 0, pad = 0, autoexpand = T))
-
+    fig <- fig %>% layout(
+      showlegend = FALSE, geo = g,
+      # autosize=F,
+      paper_bgcolor = "rgba(0,0,0,0)",
+      plot_bgcolor = "rgba(0,0,0,0)",
+      margin = list(l = 0, r = 0, t = 0, b = 0, pad = 0, autoexpand = T)
+    )
   })
 }
 
-shinyApp(ui, server)
 
+
+# ------------ render app
+shinyApp(ui, server)
