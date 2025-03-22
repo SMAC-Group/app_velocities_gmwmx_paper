@@ -393,7 +393,8 @@ ui <- fluidPage(
           options = pickerOptions(
             actionsBox = TRUE,
             title = "Please select GNSS stations",
-            header = "Selected GNSS stations"
+            header = "Selected GNSS stations",
+            liveSearch=T
           )
         ),
         checkboxInput("show_arrows", "Show estimated tectonic velocities", TRUE),
